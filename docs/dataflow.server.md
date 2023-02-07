@@ -2,6 +2,8 @@
 
 Namespace: DataFlow
 
+Provides functionality for managing a server.
+
 ```csharp
 public class Server
 ```
