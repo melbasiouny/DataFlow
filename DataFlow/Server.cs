@@ -10,6 +10,9 @@ using DataFlow.Utilities;
 
 namespace DataFlow;
 
+/// <summary>
+///     Provides functionality for managing a server.
+/// </summary>
 public class Server
 {
     /// <summary>
@@ -76,6 +79,8 @@ public class Server
 
         _tcpListener.Start();
         _tcpListener.BeginAcceptTcpClient(ConnectCallback, null);
+
+        Logger.Log(LogLevel.Information, "Listening for incoming connections.");
     }
 
     /// <summary>
