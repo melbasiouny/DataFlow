@@ -96,6 +96,8 @@ internal class Peer
 
         await _peer.networkStream.WriteAsync(BitConverter.GetBytes(buffer.Length)).ConfigureAwait(false);
         await _peer.networkStream.WriteAsync(buffer).ConfigureAwait(false);
+
+        Task.Delay(1).Wait();
     }
 
     /// <summary>
