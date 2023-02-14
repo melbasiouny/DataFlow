@@ -76,6 +76,8 @@ public sealed class Packet
     /// <returns> The packet binary reader. </returns>
     public BinaryReader Deserialize()
     {
+        _memoryStream.Seek(0, SeekOrigin.Begin);
+
         var binaryReader = new BinaryReader(_memoryStream);
 
         return _header.compressed
