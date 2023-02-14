@@ -119,5 +119,5 @@ public event EventHandler<Guid> Disconnected;
 Invoked when a packet is received.
 
 ```csharp
-public event EventHandler<Guid> PacketReceived;
+public event EventHandler<PacketEventArgs> PacketReceived;
 ```

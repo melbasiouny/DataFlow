@@ -81,18 +81,18 @@ Invoked when the client gets disconnected.
 public event EventHandler Disconnected;
 ```
 
-### **PacketReceived**
-
-Invoked when the client receives a packet.
-
-```csharp
-public event EventHandler PacketReceived;
-```
-
 ### **ConnectionRefused**
 
 Invoked when the client is actively refused connection.
 
 ```csharp
 public event EventHandler ConnectionRefused;
+```
+
+### **PacketReceived**
+
+Invoked when the client receives a packet.
+
+```csharp
+public event EventHandler<Packet> PacketReceived;
 ```
