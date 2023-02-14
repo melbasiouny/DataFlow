@@ -71,7 +71,7 @@ public class Client
         Peer.PacketReceived += delegate(object? _, PacketEventArgs packetEventArgs)
         {
             if (_packetHandlers.TryGetValue(packetEventArgs.Packet.ReadIdentifier(), out var packetHandler)) packetHandler(packetEventArgs.Packet);
-            PacketReceived?.Invoke(this, EventArgs.Empty);
+            PacketReceived?.Invoke(this, packetEventArgs.Packet);
         };
 
         _peer?.Connect();
@@ -105,14 +105,14 @@ public class Client
     public event EventHandler? Disconnected;
 
     /// <summary>
-    ///     Invoked when the client receives a packet.
-    /// </summary>
-    public event EventHandler? PacketReceived;
-
-    /// <summary>
     ///     Invoked when the client is actively refused connection.
     /// </summary>
     public event EventHandler? ConnectionRefused;
+
+    /// <summary>
+    ///     Invoked when the client receives a packet.
+    /// </summary>
+    public event EventHandler<Packet>? PacketReceived;
 
     /// <summary>
     ///     Retrieves methods that has the <see cref="PacketHandlerAttribute" /> applied.

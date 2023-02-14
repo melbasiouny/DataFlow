@@ -8,7 +8,7 @@ namespace DataFlow;
 /// <summary>
 ///     Contains event data for received packets.
 /// </summary>
-internal class PacketEventArgs : EventArgs
+public class PacketEventArgs : EventArgs
 {
     /// <summary>
     ///     The sender GUID.

@@ -54,7 +54,7 @@ public class Server
     /// <summary>
     ///     Invoked when a packet is received.
     /// </summary>
-    public event EventHandler<Guid>? PacketReceived;
+    public event EventHandler<PacketEventArgs>? PacketReceived;
 
     /// <summary>
     ///     Begins accepting incoming connections.
@@ -74,7 +74,7 @@ public class Server
             if (_packetHandlers.TryGetValue(packetEventArgs.Packet.ReadIdentifier(), out var packetHandler))
                 packetHandler(packetEventArgs.Guid, packetEventArgs.Packet);
 
-            PacketReceived?.Invoke(this, packetEventArgs.Guid);
+            PacketReceived?.Invoke(this, packetEventArgs);
         };
 
         _tcpListener.Start();
