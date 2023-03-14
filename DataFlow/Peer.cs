@@ -86,18 +86,33 @@ internal class Peer
     /// <param name="packet"> The packet to be sent. </param>
     public async Task SendAsync(Packet packet)
     {
+        if (_peer.networkStream == null || !_peer.networkStream.CanWrite)
+        {
+            Disconnected?.Invoke(this, _guid);
+            Logger.Log(LogLevel.Error, $"Unable to send packet with identifier {packet.ReadIdentifier()}. The network stream is closed or not writable.");
+            return;
+        }
+
         var buffer = packet.Serialize();
 
         if (buffer.Length > Packet.Size)
         {
-            Logger.Log(LogLevel.Warning, $"Dismissing large packet with identifier {packet.ReadIdentifier()}.");
+            Logger.Log(LogLevel.Warning, $"Dismissing large packet with identifier {packet.ReadIdentifier()}. Packet size {buffer.Length} exceeds the maximum size of {Packet.Size}.");
             return;
         }
 
-        await _peer.networkStream.WriteAsync(BitConverter.GetBytes(buffer.Length)).ConfigureAwait(false);
-        await _peer.networkStream.WriteAsync(buffer).ConfigureAwait(false);
-
-        Task.Delay(1).Wait();
+        try
+        {
+            await _peer.networkStream.WriteAsync(BitConverter.GetBytes(buffer.Length)).ConfigureAwait(false);
+            await _peer.networkStream.WriteAsync(buffer).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            Disconnected?.Invoke(this, _guid);
+            Logger.Log(LogLevel.Error, $"Unable to send packet with identifier {packet.ReadIdentifier()}: {exception.Message}");
+        }
+        
+        await Task.Delay(1);
     }
 
     /// <summary>
@@ -116,14 +131,13 @@ internal class Peer
                 var length = BitConverter.ToUInt32(buffer, 0);
                 var offset = 0;
 
-                if (readAsync == 0) throw new Exception("Ambiguous packet length.");
+                if (readAsync == 0) throw new InvalidOperationException("Ambiguous packet length");
 
                 do
                 {
-                    readAsync = await _peer.networkStream.ReadAsync(buffer.AsMemory(offset, (int)(length - offset)), cancellationToken)
-                        .ConfigureAwait(false);
+                    readAsync = await _peer.networkStream.ReadAsync(buffer.AsMemory(offset, (int)(length - offset)), cancellationToken).ConfigureAwait(false);
 
-                    if (readAsync == 0) throw new Exception("Peer ended connection.");
+                    if (readAsync == 0) throw new IOException("Peer ended connection.");
 
                     offset += readAsync;
                 } while (offset < length);
@@ -131,15 +145,24 @@ internal class Peer
                 var receivedPacket = new Packet(buffer.AsSpan(0, (int)length).ToArray());
 
                 PacketReceived?.Invoke(this, new PacketEventArgs(_guid, receivedPacket));
-                Logger.Log(LogLevel.Information, $"Packet received from {_peer.tcpClient.Client.RemoteEndPoint}.");
+                Logger.Log(LogLevel.Information, $"Packet received from {_peer.tcpClient.Client.RemoteEndPoint} with identifier {receivedPacket.ReadIdentifier()} and length {length} bytes.");
             }
         }
-        catch (Exception)
+        catch (IOException)
         {
             Disconnected?.Invoke(this, _guid);
             Logger.Log(LogLevel.Warning, $"Peer {_peer.tcpClient.Client.RemoteEndPoint} disconnected.");
 
-            if (_peer.tcpClient.Connected) _peer.tcpClient.Close();
+            if (_peer.tcpClient.Connected)
+            {
+                _peer.tcpClient.Client.Shutdown(SocketShutdown.Both);
+                _peer.tcpClient.Client.Dispose();
+            }
+        }
+        catch(OperationCanceledException)
+        {
+            Logger.Log(LogLevel.Warning, $"Receive operation was cancelled.");
+            return;
         }
     }
 }
