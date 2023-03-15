@@ -7,4 +7,4 @@ Download the [latest release](https://github.com/melbasiouny/DataFlow/releases) 
 For more information check out the [documentation](https://melbasiouny.github.io/DataFlow/).
 
 ## License
-Streamline is licensed under the MIT license. See [LICENSE](LICENSE.txt) for more information.
+DataFlow is licensed under the MIT license. See [LICENSE](LICENSE.txt) for more information.
