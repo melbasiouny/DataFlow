@@ -60,7 +60,7 @@ public class Client
         }
         catch (Exception exception)
         {
-            Logger.Log(LogLevel.Error, $"{exception.Message}.");
+            Logger.Log(LogLevel.Error, exception.Message);
             ConnectionRefused?.Invoke(this, EventArgs.Empty);
         }
 
@@ -82,6 +82,8 @@ public class Client
     /// </summary>
     public void Disconnect()
     {
+        Send(new Packet(ushort.MaxValue, out var _)).Wait();
+
         _peer?.Disconnect();
     }
 

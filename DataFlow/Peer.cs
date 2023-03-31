@@ -131,18 +131,20 @@ internal class Peer
                 var length = BitConverter.ToUInt32(buffer, 0);
                 var offset = 0;
 
-                if (readAsync == 0) throw new InvalidOperationException("Ambiguous packet length");
+                if (readAsync == 0) throw new InvalidOperationException("Ambiguous packet length.");
 
                 do
                 {
                     readAsync = await _peer.networkStream.ReadAsync(buffer.AsMemory(offset, (int)(length - offset)), cancellationToken).ConfigureAwait(false);
 
-                    if (readAsync == 0) throw new IOException("Peer ended connection.");
+                    if (readAsync == 0) throw new IOException("Peer unexpectedly ended the connection.");
 
                     offset += readAsync;
                 } while (offset < length);
 
                 var receivedPacket = new Packet(buffer.AsSpan(0, (int)length).ToArray());
+
+                if (receivedPacket.ReadIdentifier() == ushort.MaxValue) throw new IOException("Peer ended the connection.");
 
                 PacketReceived?.Invoke(this, new PacketEventArgs(_guid, receivedPacket));
                 Logger.Log(LogLevel.Information, $"Packet received from {_peer.tcpClient.Client.RemoteEndPoint} with identifier {receivedPacket.ReadIdentifier()} and length {length} bytes.");
@@ -159,7 +161,7 @@ internal class Peer
                 _peer.tcpClient.Client.Dispose();
             }
         }
-        catch(OperationCanceledException)
+        catch (Exception exception) when (exception is OperationCanceledException || exception is InvalidOperationException)
         {
             Logger.Log(LogLevel.Warning, $"Receive operation was cancelled.");
             return;
