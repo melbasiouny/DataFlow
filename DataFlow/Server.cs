@@ -77,8 +77,16 @@ public class Server
             PacketReceived?.Invoke(this, packetEventArgs);
         };
 
-        _tcpListener.Start();
-        _tcpListener.BeginAcceptTcpClient(ConnectCallback, null);
+        try
+        {
+            _tcpListener.Start();
+            _tcpListener.BeginAcceptTcpClient(ConnectCallback, null);
+        }
+        catch (SocketException socketException)
+        {
+            Logger.Log(LogLevel.Error, $"The port number {((IPEndPoint)_tcpListener.LocalEndpoint).Port} is already in use.");
+            Environment.Exit(socketException.ErrorCode);
+        }
 
         Logger.Log(LogLevel.Information, "Listening for incoming connections.");
     }
